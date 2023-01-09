@@ -40,7 +40,7 @@ Once you are finished with your video, download it locally as an mp4 file by nav
 
 ![download_video](img/download_video.png)
 
-Note, it is important to consider principles of [Universal Design] (i.e., captioning your video or ensuring that a transcript is made available to participants) (https://www.washington.edu/doit/universal-design-process-principles-and-applications) when creating task instructions to promote accessibility.
+Note, it is important to consider principles of [Universal Design](https://www.washington.edu/doit/universal-design-process-principles-and-applications) (i.e., captioning your video or ensuring that a transcript is made available to participants) when creating task instructions so ensure accessibility.
 
 **Example instruction video:** [Gem Hunters](https://drive.google.com/file/d/1OiVJyvNp0mrnBy_VhVCejjZ6tDUyZLLr/view?usp=sharing)
 
