@@ -1,6 +1,6 @@
 # Canva Video Instructions Tutorial
 
-Tutorial for using [Canva](https://www.canva.com/education/) to create video instructions for tasks. 
+Tutorial for using [Canva](https://www.canva.com/education/) to create video instructions for tasks. This is a helpful tool for gamifying your tasks - the importance of task gamification for research is highlighted by [Long et al., 2023](https://www.nature.com/articles/d41586-023-00065-6)! 
 
 The **first step** is to create a free account by visiting [Canva](https://www.canva.com/education/). There is a 14-day free trial for Canva Pro which grants access to all site features. However, Canva Pro is *not* absolutely necessary for creating video instructions. 
 
