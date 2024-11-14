@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+
+    <!-- read in js libraries -->
+    <script src="static/lib/jspsych-6.2.0/jspsych.js"></script>
+    <script src="static/lib/jquery-3.3.1/jquery.min.js"></script>
+
+    <!-- read in plugins -->
+    <!-- default -->
+    <script src="static/lib/jspsych-6.2.0/plugins/jspsych-html-keyboard-response.js"></script>
+    <script src="static/lib/jspsych-6.2.0/plugins/jspsych-fullscreen.js"></script>
+    <script src="static/lib/jspsych-6.2.0/plugins/jspsych-survey-text.js"></script>
+    <script src="static/lib/jspsych-6.2.0/plugins/jspsych-survey-text.js"></script>
+    <script src="static/lib/jspsych-6.2.0/plugins/jspsych-external-html.js"></script>
+    <script src="static/lib/jspsych-6.2.0/plugins/jspsych-pavlovia-2020.4.js"></script>
+        <script src="static/lib/jspsych-6.2.0/plugins/jspsych-instructions.js"></script>
+
+    
+    <!-- custom --> 
+    <script src="static/js/bandit.js"></script>
+    <script src="static/js/practice-bandit.js"></script>
+    <script src="static/js/practice-bandit-win.js"></script>
+    <script src="static/js/practice-bandit-loss.js"></script>
+    <script src="static/js/button-mapping.js"></script> 
+    <script src="static/js/nivturk-plugins.js" type="text/javascript"></script>
+
+    
+    <script src="static/js/jspsych-survey-html-form-with-image.js"></script>
+
+    <!-- read in static variables -->
+    <script src="static/js/bandit-stimuli.js"></script>
+    <script src="static/js/bandit-queues.js"></script>
+
+    <!-- read in stylesheets -->
+    <link href="static/lib/jspsych-6.2.0/css/jspsych.css" rel="stylesheet" type="text/css"></link>
+     <!-- read in instructions -->
+     <script src="static/js/instructions-video1.js"></script>        
+     <script src="static/js/instructions-video2.js"></script>    
+     <script src="static/js/instructions-video3.js"></script>    
+     <script src="static/js/instructions-video4.js"></script>    
+            
+  </head>
+  <body></body>
+  <script>
+
+  // Display alert message on back/refresh.
+  // https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onbeforeunload
+  function verify_unload(e){
+    e.preventDefault();
+    (e || window.event).returnValue = null;
+    return null;
+  };
+  window.addEventListener("beforeunload", verify_unload);
+
+  // Specify whether to write data 
+  // Only checked after instructions?
+  var writeData = true;
+  var version = 'v0' // 0 is pilot
+
+  //------------------------------------
+  // Messages and landing pages
+  //------------------------------------
+  
+  // load images that appear in instructions and are associated with relevant dimension hints to be preloaded later
+  
+  var hint_example_image = [
+  'static/img/dimension-hint.png',
+  'static/img/no-hint.png',
+];
+
+  var hint_image = [
+  'static/img/h-shapes-example.png',
+  'static/img/h-colors-example.png',
+];
+
+  var trial_example_image = [
+  'static/img/trial_example_h.png',
+];
+
+  var characters_image = [
+  'static/img/characters.png',
+];
+
+  
+  // function to check if a subject has given consent to participate.
+ // var check_consent = function(elem) {
+  //  if (document.getElementById('consent_checkbox').checked) {
+    //    return true;
+    //}
+    //else {
+      //  alert("If you wish to participate, you must check the box next to the statement 'I AGREE.' If you do not wish to participate, please navigate back to Prolific and return the study.");
+        //return false;
+    //}
+    //return false;
+//};
+
+// consent block
+//var consent = {
+  //  type: "external-html",
+    //url: "templates/consent.html",
+    //cont_btn: "start",
+    //check_fn: check_consent
+//};
+
+  // define welcome message
+  var welcome = {
+    type: "html-keyboard-response",
+    stimulus: "Welcome to the experiment. Press the space bar to begin."
+  };
+
+
+  // define block end message
+  var block_end = {
+    type: "html-keyboard-response",
+    stimulus: function(){
+
+        return "<img src=static/img/moon.png style=position:fixed</img><br><br> The day is over! <br><br> You have collected " + counter.rewards.toString() + " rewards! <br><br> Take a break, and press the space bar to continue when you are ready. <br><br>"},
+
+    on_finish: function(data){ // what to do on each block change
+ 
+      // re-randomise feedback queues before the start of each new block
+      for (var i = 0; i < feedback_queues.length; i++){
+        rfq[i] = jsPsych.randomization.repeat(feedback_queues[i], 1);
+      }
+      queues.rfq = rfq;
+
+      // reset counters
+      counter.block += 1;
+      counter.trial = 1;
+      counter.correct = 1;
+      counter.incorrect = 1
+    }
+  };
+  
+  var block_starting = {
+  type:"html-keyboard-response",
+  stimulus: function(){
+  return "<img src=static/img/sun.png style=position:fixed</img><br><br> A new day is starting! <br><br> Dave's favorite feature is changing... "},
+  choices: "NO_KEYS",
+  trial_duration: 5000,
+  };
+  
+  
+    // define TRAINING block end message
+  var training_block_end = {
+    type: "html-keyboard-response",
+    stimulus: function(){
+
+        return "<img src=static/img/moon.png style=position:fixed</img><br><br> You have collected " + counter.training_rewards.toString() + " rewards! <br><br>The day is over! <br><br> Take a break, and press the space bar to continue when you are ready. <br><br>"},
+    on_finish: function(data){ // what to do on each block change
+ 
+      // re-randomise feedback queues before the start of each new block
+      for (var i = 0; i < training_feedback_queues.length; i++){
+        rfq[i] = jsPsych.randomization.repeat(training_feedback_queues[i], 1);
+      }
+      queues.rfq = rfq;
+
+      // reset counters
+      counter.block += 1;
+      counter.trial = 1;
+      counter.correct = 1;
+      counter.incorrect = 1
+    }
+  };
+  
+    var target_practice_end = {
+    type: "html-keyboard-response",
+    stimulus: function(){
+
+        return ""},
+        choices: "NO_KEYS",
+        trial_duration: 500,
+    on_finish: function(data){ // what to do on each block change
+ 
+      // re-randomise feedback queues before the start of each new block
+      for (var i = 0; i < training_feedback_queues.length; i++){
+        rfq[i] = jsPsych.randomization.repeat(training_feedback_queues[i], 1);
+      }
+      queues.rfq = rfq;
+
+      // reset counters
+      counter.block += 1;
+      counter.trial = 1;
+      counter.correct = 1;
+      counter.incorrect = 1
+    }
+  };
+  
+  var training_block_starting = {
+  type:"html-keyboard-response",
+  stimulus: function(){
+  return "<img src=static/img/sun.png style=position:fixed</img><br><br> A new day is starting! <br><br> Dave's favorite feature is changing... "},
+  choices: "NO_KEYS",
+  trial_duration: 5000,
+  };
+  
+
+  // define experiment end message
+  var expt_end = {
+    type: "html-keyboard-response",
+    stimulus: function(){
+
+        return "End of experiment. <br><br> You have earned $" + 3*counter.rewards.toString()/100 + " bonus! <br><br> Press the space bar to quit."},
+  };
+  
+  //------------------------------------
+  // Functions to turn fullscreen on/off
+  //------------------------------------
+
+  var fullscreen_on = {
+    type: "fullscreen",
+    fullscreen_mode: true,
+    message: '<p>The experiment will switch to full screen mode when you press the button below.</p><p>Where possible, please stay in full screen mode for the entire experiment.</p>'
+  };
+
+  var fullscreen_off = {
+    type: "fullscreen",
+    fullscreen_mode: false
+  };
+
+  //------------------------------------
+  // Define and randomise experimental variables
+  //------------------------------------
+
+    // randomise payout queues for the blocks, and place them in a global variable (so they can be accessed and manipulated independently of the jsPsych trial structure). This randomisation will be done afresh in each block changeover (this is true because of the on_finish call above)
+  var rfq = [[],[]];
+  for (var i = 0; i < feedback_queues.length; i++){
+    rfq[i] = jsPsych.randomization.repeat(feedback_queues[i], 1);
+  }
+  var queues = {};
+  queues.rfq = rfq;
+  
+  
+  // shuffle order and convert to dictionary. This randomisation will be done afresh in each block changeover (this is true because of the on_finish call above)
+  var idx_combinations = jsPsych.randomization.sampleWithoutReplacement([...Array(18).keys()], 18)
+  stim_combinations = []
+  for(var i = 0; i < idx_combinations.length; i++) {
+  this_stim_combo = jsPsych.randomization.repeat(all_stim_combinations[idx_combinations[i]], 1)
+  stim_combinations.push({
+    left_stimulus: this_stim_combo[0],
+    center_stimulus: this_stim_combo[1],
+    right_stimulus: this_stim_combo[2]
+  });
+  }
+  
+
+  // set up color dictionary for manipulation check
+  color_images_dict = []
+  for(var i = 0; i < color_images.length; i++) {
+  color_images_dict.push({
+    stimulus: color_images[i],
+  });
+  }
+  
+  // set up color similarity dictionary for manipulation check
+  color_similarity_dict = []
+  for(var i = 0; i < color_similarity.length; i++) {
+  color_similarity_dict.push({
+    stimulus: color_similarity[i],
+  });
+  }
+
+  // set up shape dictionary for manipulation check
+  shape_images_dict = []
+  for(var i = 0; i < shape_images.length; i++) {
+  shape_images_dict.push({
+    stimulus: shape_images[i],
+  });
+  }
+  
+  // set up shape similarity dictionary for manipulation check
+  shape_similarity_dict = []
+  for(var i = 0; i < color_images.length; i++) {
+  shape_similarity_dict.push({
+    stimulus: shape_similarity[i],
+  });
+  }
+  
+  // initiate block and trial counters
+  var counter = {};
+  var n_blocks = 12; // 6 with no hint, 6 with dimension hint
+  var training1_n_blocks = 2; // 2 with no hint, 2 with hint
+  var training2_n_blocks = 2; // 2 with no hint, 2 with hint
+  var training3_n_blocks = 2; // 2 with no hint, 2 with hint
+  counter.block = 1;
+  counter.trial = 1;
+  counter.correct = 1;
+  counter.incorrect = 1;
+  counter.rewards = 0;
+  counter.training_rewards=0;
+  counter.button_mapping_rewards=0;
+  counter.training_win_rewards=0;
+  counter.training_loss_rewards=0;
+  
+  var target_feature_n_blocks = 1;
+  var not_target_feature_n_blocks= 1;
+  var button_mapping_n_blocks = 1; 
+  
+
+  //------------------------------------
+  // Define experimental blocks
+  //------------------------------------
+
+  // randomize block queue.
+  var n_reps = n_blocks / block_queue.length; 
+  var this_block_queue = [];
+  for(var r = 0; r < n_reps; r++) {
+  var x = jsPsych.randomization.repeat(block_queue, 1);
+  this_block_queue = this_block_queue.concat(x);
+  }
+  
+  
+    // set training block queues
+  var n_reps_training1 = training1_n_blocks / training_block_queue.length; 
+  var this_block_queue_training1 = [];
+  for(var r = 0; r < n_reps_training1; r++) {
+  var x = training_block_queue;
+  this_block_queue_training1 = this_block_queue_training1.concat(x);
+  }
+  
+  var n_reps_training2 = training2_n_blocks / training_block_queue.length; 
+  var this_block_queue_training2 = [];
+  for(var r = 0; r < n_reps_training2; r++) {
+  var x = training_block_queue;
+  this_block_queue_training2 = this_block_queue_training2.concat(x);
+  }
+  
+  var n_reps_training3 = training3_n_blocks / training_block_queue.length; 
+  var this_block_queue_training3 = [];
+  for(var r = 0; r < n_reps_training3; r++) {
+  var x = training_block_queue;
+  this_block_queue_training3 = this_block_queue_training3.concat(x);
+  }
+  
+  var n_reps_target_feature_block = target_feature_n_blocks / practice_target_feature_queue.length;
+  var this_block_queue_target_feature = [];
+    for(var r = 0; r < n_reps_target_feature_block; r++) {
+  var x = target_feature_queue;
+  this_block_queue_target_feature = this_block_queue_target_feature.concat(x);
+  }
+  
+  var n_reps_not_target_feature_block = not_target_feature_n_blocks / practice_target_feature_queue.length;
+    var this_block_queue_not_target_feature = [];
+      for(var r = 0; r < n_reps_not_target_feature_block; r++) {
+  var x = not_target_feature_queue;
+  this_block_queue_not_target_feature = this_block_queue_not_target_feature.concat(x);
+  }
+  
+    var n_reps_button_mapping_block = button_mapping_n_blocks / button_mapping_queue.length;
+    var this_block_queue_button_mapping = [];
+      for(var r = 0; r < n_reps_button_mapping_block; r++) {
+  var x = button_mapping_queue;
+  this_block_queue_button_mapping = this_block_queue_button_mapping.concat(x);
+  }
+  
+  
+  // randomize target features within condition.
+  // this doesn't fully ensure there will be no category repeats.
+  target_feature_queue_high = jsPsych.randomization.repeat([1, 2, 3, 4, 5, 6], 1);
+  target_feature_queue_low = jsPsych.randomization.repeat([1, 2, 3, 4, 5, 6], 1);
+  
+  // do not randomize target feature for training trials 
+  training1_feature_queue = [1,4]; // 1 is yellow, 4 is circle
+  training2_feature_queue = [5,2]; // 5 is oval, 2 is blue
+  training3_feature_queue = [3,6]; // 3 is orange, 6 is square
+  
+  
+  // make block sequence.
+  var block_queue = []
+  var target_feature_queue = []
+  var high_count = 0
+  var low_count = 0
+  var hint_count = 0
+  
+  // make training block sequences (include the option for 3 sequences of 2 rounds of training).
+  var training1_block_queue = []
+  var training1_target_feature_queue = []
+  var training1_count = 0
+  var training1_hint_count = 0
+  
+  var training2_block_queue = []
+  var training2_target_feature_queue = []
+  var training2_count = 0
+  var training2_hint_count = 0
+  
+  var training3_block_queue = []
+  var training3_target_feature_queue = []
+  var training3_count = 0
+  var training3_hint_count = 0
+  
+  var practice_target_feature_queue = []
+  var practice_target_feature_queue = []
+  var practice_target_feature_count = 0
+
+  var not_target_feature_queue = []
+  var not_target_feature_queue = []
+  var not_target_feature_count = 0
+  
+  var button_mapping_queue = []
+  var button_mapping_queue = []
+  var button_mapping_count = 0
+  
+
+  // define block "no hint" message 
+  var block_no_hint = {
+  type:"html-keyboard-response",
+  stimulus: function(){
+  return '<p style=font size:30px> <b> No hint.</b> <br><br> <img src=static/img/photodiode.png style="position:fixed;top:700px;right:1100px; width:200%"</img><br><br>'},
+  choices: "NO_KEYS",
+  trial_duration: 5000,
+  css_classes: ['hint'],
+  };
+  
+  // define block "hint" message
+  var block_hint = {
+  type:"html-keyboard-response",
+  stimulus: function(){
+  var target_feature_hint = target_feature_queue_low[hint_count];
+  hint_count = hint_count + 1; 
+  if (target_feature_hint > 3) { 
+  hint = '<p style=font size:30px> <b> Hint: SHAPE </b> <br><br> <img src=static/img/photodiode.png style="position:fixed; top:700px;right:1100px; width:200%" </img><br><br>';
+  } else if (target_feature_hint < 4) {
+  hint = '<p style=font size:30px> <b> Hint: COLOR </b> <br><br> <img src=static/img/photodiode.png style="position:fixed; top:700px;right:1100px; width:200%" </img><br><br>';
+  }
+  return hint;
+  },
+  choices: "NO_KEYS",
+  trial_duration: 5000,
+  css_classes: ['hint'],
+  };
+  
+    // define block "no hint" message for training 
+  var training_block_no_hint = {
+  type:"html-keyboard-response",
+  stimulus: function(){
+  return '<p style=font size:30px> <b> No hint. </b> <br><br> <img src=static/img/photodiode.png style="position:fixed;top:700px;right:1100px; width:200%"</img><br><br>'},
+  choices: "NO_KEYS",
+  trial_duration: 5000,
+  css_classes: ['hint'],
+  };
+  
+  // define block "hint" message for training 1
+  var training1_block_hint = {
+  type:"html-keyboard-response",
+  stimulus: function(){
+  var training1_target_feature_hint = training1_feature_queue[training1_hint_count];
+  training1_hint_count = training1_hint_count + 1; 
+  if (training1_target_feature_hint > 3) { 
+  training1_hint = '<p style=font size:30px> <b> Hint: SHAPE </b> <br><br> <img src=static/img/photodiode.png style="position:fixed; top:700px;right:1100px; width:200%" </img><br><br>';
+  } else if (training1_target_feature_hint < 4) {
+  training1_hint = '<p style=font size:30px> <b> Hint: COLOR </b> <br><br> <img src=static/img/photodiode.png style="position:fixed; top:700px;right:1100px; width:200%" </img><br><br>';
+  }
+  return training1_hint;
+  },
+  choices: "NO_KEYS",
+  trial_duration: 5000,
+  css_classes: ['hint'],
+  };
+  
+   // define block "hint" message for training 2
+     var training2_block_hint = {
+  type:"html-keyboard-response",
+  stimulus: function(){
+  var training2_target_feature_hint = training2_feature_queue[training2_hint_count];
+  training2_hint_count = training2_hint_count + 1; 
+  if (training2_target_feature_hint > 3) { 
+  training2_hint = '<p style=font size:30px> <b> Hint: SHAPE </b> <br><br> <img src=static/img/photodiode.png style="position:fixed; top:700px;right:1100px; width:200%" </img><br><br>';
+  } else if (training2_target_feature_hint < 4) {
+  training2_hint = '<p style=font size:30px> <b> Hint: COLOR </b> <br><br> <img src=static/img/photodiode.png style="position:fixed; top:700px;right:1100px; width:200%" </img><br><br>';
+  }
+  return training2_hint;
+  },
+  choices: "NO_KEYS",
+  trial_duration: 5000,
+  css_classes: ['hint'],
+  };
+   
+    // define block "hint" message for training 3
+    var training3_block_hint = {
+  type:"html-keyboard-response",
+  stimulus: function(){
+  var training3_target_feature_hint = training3_feature_queue[training3_hint_count];
+  training3_hint_count = training3_hint_count + 1; 
+  if (training3_target_feature_hint > 3) { 
+  training3_hint = '<p style=font size:30px> <b> Hint: SHAPE </b> <br><br> <img src=static/img/photodiode.png style="position:fixed; top:700px;right:1100px; width:200%" </img><br><br>';
+  } else if (training3_target_feature_hint < 4) {
+  training3_hint = '<p style=font size:30px> <b> Hint: COLOR </b> <br><br> <img src=static/img/photodiode.png style="position:fixed; top:700px;right:1100px; width:200%" </img><br><br>';
+  }
+  return training3_hint;
+  },
+  choices: "NO_KEYS",
+  trial_duration: 5000,
+  css_classes: ['hint'],
+  };
+
+// button mapping - this is just three trials that allow the participant to practice pressing the buttons before starting the main game.
+
+for(var b = 0; b < button_mapping_n_blocks; b++) {
+      //re-randomise stimulus sequence.
+    var button_mapping_idx_combinations = jsPsych.randomization.sampleWithoutReplacement([...Array(3).keys()], 3)
+    button_mapping_stim_combinations = []
+    for(var i = 0; i < button_mapping_idx_combinations.length; i++) {
+    button_mapping_this_stim_combo = jsPsych.randomization.repeat(all_stim_combinations[button_mapping_idx_combinations[i]], 1)
+    button_mapping_stim_combinations.push({
+      left_stimulus: button_mapping_this_stim_combo[0],
+      center_stimulus: button_mapping_this_stim_combo[1],
+      right_stimulus: button_mapping_this_stim_combo[2]
+    });
+    }
+  
+    var button_mapping_block = {
+      timeline_variables: button_mapping_stim_combinations,
+      timeline:
+        [{
+          type: 'button-mapping',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'button_mapping',
+          target_feature: 1,
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+        
+       button_mapping_queue = button_mapping_queue.concat(button_mapping_block);
+
+       button_mapping_queue = button_mapping_queue.concat(target_practice_end)
+       
+  }
+  
+  
+  /// practice picking target feature - orange gems
+  
+for(var b = 0; b < target_feature_n_blocks; b++) {
+
+    var target_feature_idx_combinations = jsPsych.randomization.sampleWithoutReplacement([...Array(18).keys()], 18)
+    target_feature_stim_combinations = []
+    for(var i = 0; i < target_feature_idx_combinations.length; i++) {
+    target_feature_this_stim_combo = jsPsych.randomization.repeat(all_stim_combinations[target_feature_idx_combinations[i]], 1)
+    target_feature_stim_combinations.push({
+      left_stimulus: target_feature_this_stim_combo[0],
+      center_stimulus: target_feature_this_stim_combo[1],
+      right_stimulus: target_feature_this_stim_combo[2]
+    });
+    }
+  
+    var practice_target_feature_block = {
+      timeline_variables: target_feature_stim_combinations,
+      timeline:
+        [{
+          type: 'practice-bandit-win',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'practice_target_feature',
+          target_feature: 3, // set the target feature as circle to guarantee the patient experiences 80% probability when clicking orange gems
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+  
+        practice_target_feature_queue = practice_target_feature_queue.concat(practice_target_feature_block);
+
+       practice_target_feature_queue = practice_target_feature_queue.concat(target_practice_end)
+ }
+ 
+  
+// practice picking the non-target feature - predetermined to be square (this bit along with the practice picking target feature and button mapping will go in the middle of the video)
+for(var b = 0; b < not_target_feature_n_blocks; b++) {
+
+    var not_target_feature_idx_combinations = jsPsych.randomization.sampleWithoutReplacement([...Array(18).keys()], 18)
+    not_target_feature_stim_combinations = []
+    for(var i = 0; i < not_target_feature_idx_combinations.length; i++) {
+    not_target_feature_this_stim_combo = jsPsych.randomization.repeat(all_stim_combinations[not_target_feature_idx_combinations[i]], 1)
+    not_target_feature_stim_combinations.push({
+      left_stimulus: not_target_feature_this_stim_combo[0],
+      center_stimulus: not_target_feature_this_stim_combo[1],
+      right_stimulus: not_target_feature_this_stim_combo[2]
+    });
+    }
+  
+    var not_target_feature_block = {
+      timeline_variables: not_target_feature_stim_combinations,
+      timeline:
+        [{
+          type: 'practice-bandit-loss',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'practice_not_target_feature',
+          target_feature: 4, // set the target feature as circle to guarantee the patient experiences 20% probability when instructed to pick square.
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+  
+        not_target_feature_queue = not_target_feature_queue.concat(not_target_feature_block);
+
+       not_target_feature_queue = not_target_feature_queue.concat(target_practice_end)
+ }
+  
+  
+  
+  for(var b = 0; b < training1_n_blocks; b++) {
+
+    //re-randomise stimulus sequence.
+    var training1_idx_combinations = jsPsych.randomization.sampleWithoutReplacement([...Array(18).keys()], 18)
+    training1_stim_combinations = []
+    for(var i = 0; i < training1_idx_combinations.length; i++) {
+    training1_this_stim_combo = jsPsych.randomization.repeat(all_stim_combinations[training1_idx_combinations[i]], 1)
+    training1_stim_combinations.push({
+      left_stimulus: training1_this_stim_combo[0],
+      center_stimulus: training1_this_stim_combo[1],
+      right_stimulus: training1_this_stim_combo[2]
+    });
+    }
+
+    // training 1 - no hint block 
+    if (this_block_queue_training1[b]==0) {
+    training1_block_queue = training1_block_queue.concat(training_block_starting); 
+	training1_block_queue = training1_block_queue.concat(training_block_no_hint);
+    var training1_no_hint_block = {
+      timeline_variables: training1_stim_combinations,
+      timeline:
+        [{
+          type: 'practice-bandit',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'no_hint',
+          target_feature: training1_feature_queue[training1_count],
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+      training1_block_queue = training1_block_queue.concat(training1_no_hint_block);
+      training1_feature_queue = training1_feature_queue.concat([training1_feature_queue[training1_count]])
+
+      training1_count = training1_count + 1
+
+  }
+  // training 1 -  dimension hint block
+    else {
+    training1_block_queue = training1_block_queue.concat(block_starting);
+	training1_block_queue = training1_block_queue.concat(training1_block_hint); 
+    var training1_dimension_hint_block = {
+      timeline_variables: training1_stim_combinations,
+      timeline:
+        [{
+          type: 'practice-bandit',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'hint',
+          target_feature: training1_feature_queue[training1_count],
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+      training1_block_queue = training1_block_queue.concat(training1_dimension_hint_block);
+      training1_feature_queue = training1_feature_queue.concat([training1_feature_queue[training1_count]])
+
+      training1_count = training1_count + 1
+    }
+    training1_block_queue = training1_block_queue.concat(training_block_end);
+  }
+
+  for(var b = 0; b < training2_n_blocks; b++) {
+
+    //re-randomise stimulus sequence.
+    var training2_idx_combinations = jsPsych.randomization.sampleWithoutReplacement([...Array(18).keys()], 18)
+    training2_stim_combinations = []
+    for(var i = 0; i < training2_idx_combinations.length; i++) {
+    training2_this_stim_combo = jsPsych.randomization.repeat(all_stim_combinations[training2_idx_combinations[i]], 1)
+    training2_stim_combinations.push({
+      left_stimulus: training2_this_stim_combo[0],
+      center_stimulus: training2_this_stim_combo[1],
+      right_stimulus: training2_this_stim_combo[2]
+    });
+    }
+
+    // training 2 - no hint block 
+    if (this_block_queue_training2[b]==0) {
+    training2_block_queue = training2_block_queue.concat(training_block_starting); 
+	training2_block_queue = training2_block_queue.concat(training_block_no_hint);
+    var training2_no_hint_block = {
+      timeline_variables: training2_stim_combinations,
+      timeline:
+        [{
+          type: 'practice-bandit',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'no_hint',
+          target_feature: training2_feature_queue[training2_count],
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+      training2_block_queue = training2_block_queue.concat(training2_no_hint_block);
+      training2_feature_queue = training2_feature_queue.concat([training2_feature_queue[training2_count]])
+
+      training2_count = training2_count + 1
+
+  }
+  // training 2 -  dimension hint block
+    else {
+    training2_block_queue = training2_block_queue.concat(block_starting);
+	training2_block_queue = training2_block_queue.concat(training2_block_hint); 
+    var training2_dimension_hint_block = {
+      timeline_variables: training2_stim_combinations,
+      timeline:
+        [{
+          type: 'practice-bandit',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'hint',
+          target_feature: training2_feature_queue[training2_count],
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+      training2_block_queue = training2_block_queue.concat(training2_dimension_hint_block);
+      training2_feature_queue = training2_feature_queue.concat([training2_feature_queue[training2_count]])
+
+      training2_count = training2_count + 1
+    }
+    training2_block_queue = training2_block_queue.concat(training_block_end);
+  }
+  
+    for(var b = 0; b < training3_n_blocks; b++) {
+
+    //re-randomise stimulus sequence.
+    var training3_idx_combinations = jsPsych.randomization.sampleWithoutReplacement([...Array(18).keys()], 18)
+    training3_stim_combinations = []
+    for(var i = 0; i < training3_idx_combinations.length; i++) {
+    training3_this_stim_combo = jsPsych.randomization.repeat(all_stim_combinations[training3_idx_combinations[i]], 1)
+    training3_stim_combinations.push({
+      left_stimulus: training3_this_stim_combo[0],
+      center_stimulus: training3_this_stim_combo[1],
+      right_stimulus: training3_this_stim_combo[2]
+    });
+    }
+
+    // training 3 - no hint block 
+    if (this_block_queue_training3[b]==0) {
+    training3_block_queue = training3_block_queue.concat(training_block_starting); 
+	training3_block_queue = training3_block_queue.concat(training_block_no_hint);
+    var training3_no_hint_block = {
+      timeline_variables: training3_stim_combinations,
+      timeline:
+        [{
+          type: 'practice-bandit',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'no_hint',
+          target_feature: training3_feature_queue[training3_count],
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+      training3_block_queue = training3_block_queue.concat(training3_no_hint_block);
+      training3_feature_queue = training3_feature_queue.concat([training3_feature_queue[training3_count]])
+
+      training3_count = training3_count + 1
+
+  }
+  // training 3 -  dimension hint block
+    else {
+    training3_block_queue = training3_block_queue.concat(block_starting);
+	training3_block_queue = training3_block_queue.concat(training3_block_hint); 
+    var training3_dimension_hint_block = {
+      timeline_variables: training3_stim_combinations,
+      timeline:
+        [{
+          type: 'practice-bandit',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'hint',
+          target_feature: training3_feature_queue[training3_count],
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+      training3_block_queue = training3_block_queue.concat(training3_dimension_hint_block);
+      training3_feature_queue = training3_feature_queue.concat([training3_feature_queue[training3_count]])
+
+      training3_count = training3_count + 1
+    }
+    training3_block_queue = training3_block_queue.concat(training_block_end);
+  }
+
+  for(var b = 0; b < n_blocks; b++) {
+
+    //re-randomise stimulus sequence.
+    var idx_combinations = jsPsych.randomization.sampleWithoutReplacement([...Array(18).keys()], 18)
+    stim_combinations = []
+    for(var i = 0; i < idx_combinations.length; i++) {
+    this_stim_combo = jsPsych.randomization.repeat(all_stim_combinations[idx_combinations[i]], 1)
+    stim_combinations.push({
+      left_stimulus: this_stim_combo[0],
+      center_stimulus: this_stim_combo[1],
+      right_stimulus: this_stim_combo[2]
+    });
+    }
+
+    // no hint block 
+    if (this_block_queue[b]==0) {
+    block_queue = block_queue.concat(block_starting); 
+	block_queue = block_queue.concat(block_no_hint);
+    var no_hint_block = {
+      timeline_variables: stim_combinations,
+      timeline:
+        [{
+          type: 'bandit',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'no_hint',
+          target_feature: target_feature_queue_high[high_count],
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+      block_queue = block_queue.concat(no_hint_block);
+      target_feature_queue = target_feature_queue.concat([target_feature_queue_high[high_count]])
+
+      high_count = high_count + 1
+
+  }
+  // dimension hint block
+    else {
+    block_queue = block_queue.concat(block_starting);
+	block_queue = block_queue.concat(block_hint); 
+    var dimension_hint_block = {
+      timeline_variables: stim_combinations,
+      timeline:
+        [{
+          type: 'bandit',
+          sound_paths: stim_sound,
+          stimulus_paths: stim_images,
+          photodiode_paths: black_square,
+          reminder_paths: reminder,
+          condition: 'hint',
+          target_feature: target_feature_queue_low[low_count],
+          left_stimulus: jsPsych.timelineVariable('left_stimulus'),
+          center_stimulus: jsPsych.timelineVariable('center_stimulus'),
+          right_stimulus: jsPsych.timelineVariable('right_stimulus'),
+        }],
+      };
+      block_queue = block_queue.concat(dimension_hint_block);
+      target_feature_queue = target_feature_queue.concat([target_feature_queue_low[low_count]])
+
+      low_count = low_count + 1
+    }
+    block_queue = block_queue.concat(block_end);
+  }
+
+
+
+  // define what a color manipulation check is
+  var color_manipulation_check = {
+    timeline_variables: color_images_dict,
+    timeline:
+    [{
+      type: 'survey-html-form-with-image',
+      stimulus: jsPsych.timelineVariable('stimulus'),
+      html: '<p>Answer: <input type="text" id="test-resp-box" name="response" size="10" /></p>',
+      preamble: "<p class='prompt'>What word would you use to describe this color?</p>",
+      autofocus: 'test-resp-box'
+    }],
+
+  };
+
+  // define what a shape manipulation check is
+  var shape_manipulation_check = {
+    timeline_variables: shape_images_dict,
+    timeline:
+    [{
+      type: 'survey-html-form-with-image',
+      stimulus: jsPsych.timelineVariable('stimulus'),
+      html: '<p>Answer: <input type="text" id="test-resp-box" name="response" size="10" /></p>',
+      preamble: "<p class='prompt'>What word would you use to describe this shape?</p>",
+      autofocus: 'test-resp-box'
+    }],
+
+  };
+      // define what a shape similarity check is
+  var shape_similarity_check = {
+    timeline_variables: shape_similarity_dict,
+    timeline:
+    [{
+      type: 'survey-html-form-with-image',
+      stimulus: jsPsych.timelineVariable('stimulus'),
+      html: '<p>Answer: <input type="text" id="test-resp-box" name="response" size="10" /></p>',
+      preamble: "<p class='prompt'>Between 1-5, how similar are these shapes? <br> (1=Not At All Similar, 2=Somewhat Similar, 3= Moderately Similar, 4=Very Similar, 5=Completely Similar)</p>",
+      autofocus: 'test-resp-box'
+
+    }],
+
+  };
+  
+      // define what a color similarity check is
+  var color_similarity_check = {
+    timeline_variables: color_similarity_dict,
+    timeline:
+    [{
+      type: 'survey-html-form-with-image',
+      stimulus: jsPsych.timelineVariable('stimulus'),
+      html: '<p>Answer: <input type="text" id="test-resp-box" name="response" size="10" /></p>',
+      preamble: "<p class='prompt'>Between 1-5, how similar are these colors? <br> (1=Not At All Similar, 2=Somewhat Similar, 3= Moderately Similar, 4=Very Similar, 5=Completely Similar)</p>",
+      autofocus: 'test-resp-box'
+    }],
+
+  };
+  
+        // define what a subject id question is 
+  var sub_id = {
+	type: 'survey-text',
+    questions: [{prompt: 'Please enter the subject ID.', name: 'id', required: true}],
+	data: {task_part: 'id_question'}
+  };
+    
+  var game_start = {
+  type: "html-keyboard-response",
+  stimulus: "Practice rounds are over. The game is ready to begin! <br><br> You will earn 3 cents every time Dave rewards you for the gem you pick. <br><br> Press the space bar when you are ready to begin the game!"
+  };
+  
+  
+  /// the following four variables create a conditional loop so that patients have to do a minimum of 2 practice rounds (one hinted, one not hinted) and then can do an optional 4 more. 
+  
+var first_pre_if_trial = {
+      type: "html-keyboard-response",
+      stimulus: 'Press "c" to continue practicing, or "e" to move on to the game.',
+      choices: ['c','e']
+    };
+    
+var second_pre_if_trial = {
+      type: "html-keyboard-response",
+      stimulus: 'Press "y" to begin the game.',
+      choices: ['y','n']
+    };
+    
+var first_if_node = {
+      timeline: training2_block_queue,
+      conditional_function: function(){
+        var data = jsPsych.data.getLastTrialData().values()[0].key_press;
+        if(jsPsych.pluginAPI.compareKeys(data, 'e')){ // c to continue practicing, e to exit training rounds
+          return false;
+        } else {
+          return true;
+        }
+      }
+    };
+    
+var second_if_node = {
+      timeline: training3_block_queue,
+      conditional_function: function(){
+        var data = jsPsych.data.getLastTrialData().values()[0].key_press;
+        if(jsPsych.pluginAPI.compareKeys(data, 'y')){ // y to begin the game, n to continue practicing
+          return false;
+        } else {
+          return true;
+        }
+      }
+    };
+
+  
+  // capture info from Prolific 
+//  var subject_id = jsPsych.data.getURLVariable('PROLIFIC_PID');
+  //var study_id = jsPsych.data.getURLVariable('STUDY_ID');
+  //var session_id = jsPsych.data.getURLVariable('SESSION_ID');
+  
+  //jsPsych.data.addProperties({
+   //   subject_id: subject_id,
+     // study_id: study_id,
+      //session_id: session_id,
+  //});
+  
+  
+  //------------------------------------
+  // Put it all in a timeline
+  //------------------------------------
+
+  // make early timeline
+  var timeline = [];
+  
+  // init connection with pavlovia.org 
+ // var pavlovia_init = {
+  	//type: "pavlovia",
+  	//command: "init"
+  	//};
+  	//timeline.push(pavlovia_init);
+  	
+  	// make and add early timeline sequence 
+  	var early_sequence = [
+  	//consent, // consent form - removed for EMU patients because they will be consented ahead of data collection
+  	sub_id, // for EMU patients --> experimenter will input subject ID at the start of data collection session
+  	welcome,  // landing page
+  	fullscreen_on, // turn fullscreen mode on
+  	]
+  	timeline = timeline.concat(early_sequence)
+  	
+  	/// INSTRUCTION SEQUENCE
+  	timeline = timeline.concat(instructions_video1)
+  	 	
+  	 	// add button mapping trials 
+  	timeline = timeline.concat(button_mapping_queue)
+  	
+  	timeline = timeline.concat(instructions_video2)
+  	
+  	timeline = timeline.concat(practice_target_feature_queue)
+  	
+  	timeline = timeline.concat(instructions_video3)
+  	
+  	timeline = timeline.concat(not_target_feature_queue)
+  	
+  	timeline = timeline.concat(instructions_video4)
+
+  	// add training trials (there is included as a conditional sequence )
+  	timeline = timeline.concat(training1_block_queue)
+  	
+  	   var second_training = [
+   first_pre_if_trial,
+   first_if_node
+   ]
+   timeline = timeline.concat(second_training)
+  	
+   var third_training = [
+   second_pre_if_trial,
+   second_if_node
+   ]
+   timeline = timeline.concat(third_training)
+  	
+	
+  	timeline = timeline.concat(game_start)
+	
+  	// add block sequence 
+  	timeline = timeline.concat(block_queue)
+  	
+  	// add end bits
+  	var end_sequence = [
+  	color_manipulation_check, // run a color manipulation check
+  	shape_manipulation_check, // run a shape manipulation check
+  	shape_similarity_check, // run a shape similarity check
+  	color_similarity_check, // run a color similarity check
+  	expt_end, // show experiment - end screen
+  	fullscreen_off // turn fullscreen mode off
+  	]
+  	timeline = timeline.concat(end_sequence)
+  	
+  	
+  	// finish connection with pavlovia.org and make sure data is saved before server redirects participants to prolific
+  //	var pavlovia_finish = {
+  	//type: "pavlovia",
+  	//command: "finish",
+  	//dataFilter: function(data){
+  	  //  console.log(jsPsych.data.get().csv());
+  	    //return data;
+  	//},
+  	//completedCallback: function(){
+  	 //   alert(`Data successfully submitted. Thank you for participating!`);
+    //}
+  	//};
+  	//timeline.push(pavlovia_finish);
+  	
+  	// redirect participants to Prolific 
+  	
+  //	var prolific_redirect = {
+  //type: "html-keyboard-response",
+  //stimulus: `<p>You've finished the task. Thanks for participating!</p>
+   // <p><a href="https://app.prolific.co/submissions/complete?cc=1F7F12C6">Click here to return to Prolific and complete the study</a>.</p>`,
+  //choices: "NO_KEYS"
+//};
+//timeline.push(prolific_redirect);
+ 
+  //------------------------------------
+  // Set up and run the experiment
+  //------------------------------------
+
+  jsPsych.init({
+    timeline: timeline,
+    show_preload_progress_bar: true,
+    show_progress_bar: true, 
+    use_webaudio: false,
+    preload_audio: [stim_sound],
+    preload_images: [stim_images,black_square],
+    on_finish: function() {
+
+      // Remove requirement to verify redirect
+      window.removeEventListener("beforeunload", verify_unload);
+
+      // add interactions to the data variable
+      var interaction_data = jsPsych.data.getInteractionData();
+      jsPsych.data.get().addToLast({interactions: interaction_data.json()});
+
+      // Display jsPsych data in viewport.
+      // jsPsych.data.displayData();
+
+      // Save complete dataset to disk.
+      redirect_success("{{workerId}}", "{{assignmentId}}", "{{hitId}}", "{{code_success}}");
+      
+      // dynamically create file name 
+      var file_name = 'MSW_Gem_Hunters_Behavioral_Data.csv';
+      
+      // save the data locally with the file name assigned above 
+      jsPsych.data.get().localSave('csv',file_name);
+      
+      // Save rejected dataset to disk.
+      // redirect_reject("{{workerId}}", "{{assignmentId}}", "{{hitId}}", "{{code_reject}}");
+    }
+  });
+
+  </script>
+</html>

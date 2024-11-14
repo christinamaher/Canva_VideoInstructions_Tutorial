@@ -1,0 +1,30 @@
+Gem Hunters Stimuli 
+Color
+1.	Yellow - 1
+2.	Blue - 2
+3.	Orange - 3
+Shape
+1.	Circle - 4
+2.	Oval - 5
+3.	Square - 6
+Unique stimuli filenames:
+•	h11 - 1
+•	h12 - 2
+•	h13 - 3
+•	h21 - 4
+•	h22 - 5
+•	h23 - 6
+•	h31 - 7
+•	h32 - 8
+•	h33 – 9
+
+Color Similarity 
+1. Blue VS Orange - 1
+2. Blue VS Yellow - 2
+3. Yellow VS Orange - 3
+
+
+Shape Similarity 
+1. Circle VS Square - 1
+2. Circle VS Oval - 2
+3. Oval VS Square - 3
