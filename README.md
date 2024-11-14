@@ -74,5 +74,5 @@ Note, it is important to consider principles of [Universal Design](https://www.w
 
 [Create videos with Canva](https://www.canva.com/designschool/tutorials/video/) 
 
-[Tips for conducting online studies(Host: Prolific, Recruitment: Pavlovia](https://github.com/christinamaher/TipsOnlineExperiments)
+[Tips for conducting online studies (Hosting: Prolific, Recruiting: Pavlovia)](https://github.com/christinamaher/TipsOnlineExperiments)
 
