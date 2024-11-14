@@ -13,7 +13,7 @@ The **Contextual Bandit Task** is a behavioral paradigm created to explore multi
 To run the task:
 
 1. Clone this repository to your local machine.
-2. Open `index.html` in yor local browser. Note: This task is coded in JavaScript, so all functionality runs client-side within your browser.
+2. Open `\multiattribute_RL_task\index.html` in yor local browser. Note: This task is coded in JavaScript, so all functionality runs client-side within your browser.
 
 File Structure:
 `index.html`: Main HTML file to launch the task.
